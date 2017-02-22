@@ -11,9 +11,19 @@ class SudokuBoard:
     Data structure representing the board of a Sudoku game.
     """
     grid = [[Element() for x in range(9)] for y in range(9)]
+    costs_columns = [Element() for x in range(9)]
+    costs_rows = [Element() for x in range(9)]
+    cost_global = Element()
 
     def clear(self):
         self.grid = [[Element() for x in range(9)] for y in range(9)]
+        self.costs_columns = [Element() for x in range(9)]
+        self.costs_rows = [Element() for x in range(9)]
+        self.cost_global = Element()
+        for x in range(9):
+            self.costs_rows[x].color = "#b1ddff"
+            self.costs_columns[x].color = "#b1ddff"
+        self.cost_global.color = "#b1ddff"
 
     def get_row(self, row):
         return self.grid[row]
@@ -59,3 +69,9 @@ class SudokuBoard:
                 row.append(self.get_value(x, y))
             print(row)
             row.clear()
+
+    def __init__(self):
+        for x in range(9):
+            self.costs_rows[x].color = "#b1ddff"
+            self.costs_columns[x].color = "#b1ddff"
+        self.cost_global.color = "#b1ddff"
