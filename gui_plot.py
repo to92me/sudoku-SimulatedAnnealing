@@ -2,11 +2,18 @@ from matplotlib import pyplot as plt
 
 
 class PlotStats:
-    list_x = []
-    list_y = []
 
-    @staticmethod
-    def plot_lists(points_x, points_y, name_x, name_y, label):
+
+    def __init__(self):
+        self.list_x = []
+        self.list_y = []
+        self.plot_label = ""
+        self.x_label = ""
+        self.y_label = ""
+        self.legend_label = ""
+        self.color = 'b'
+
+    def plot_lists(self, points_x, points_y, name_x, name_y, label):
 
         plt.plot(points_x, points_y, color='g', label=label)
 
@@ -33,3 +40,24 @@ class PlotStats:
 
         plt.legend()
         plt.show()
+
+    def clear(self):
+        self.list_x.clear()
+        self.list_x.clear()
+
+    def plot_value_x_time_y(self):
+        time = list(range(len(self.list_x)))
+
+        plt.plot(time, self.list_x, color=self.color )
+
+        plt.xlabel("time")
+        plt.ylabel(self.y_label)
+        plt.title(self.plot_label)
+
+        plt.legend()
+        plt.show()
+
+        input()
+
+    def update_plot(self):
+        plt.draw()
