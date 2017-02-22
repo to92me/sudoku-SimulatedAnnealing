@@ -40,7 +40,7 @@ class SudokuSA(ButtonInterface):
     costs_row = [-1 for x in range(9)]
     costs_column = [-1 for x in range(9)]
     gui = object
-    state = 0
+    state = -1
     cost_column_1_new = 0
     cost_row_1_new = 0
     cost_column_2_new = 0
@@ -62,25 +62,18 @@ class SudokuSA(ButtonInterface):
     def button_solve(self):
         print("button_solve")
         self.gui.coloring = False
-        self.mainSA(1000)
+        self.mainSA(4000)
         self.gui.coloring = True
 
     def __init__(self, _sudoku_board):
         assert isinstance(_sudoku_board, SudokuBoard)
         self.board = _sudoku_board
-        self.board.set(0, 0, 9, True)
-        self.board.set(2, 2, 9)
-        self.board.set(3, 3, 8, False)
+        # self.board.set(0, 0, 9, True)
+        # self.board.set(2, 2, 4, True)
+        # self.board.set(3, 3, 8, True)
         self.board.print()
         self.calculate_rows_columns_costs()
-        print(self.calculate_cost_values(self.board.get_row_values(0)))
-        print(self.calculate_cost_values(self.board.get_column_values(0)))
-        print(self.calculate_cost_global())
-
-        points = self.pick_random()
-        self.board.set(points[0][0], points[0][1], -1)
-        self.board.set(points[1][0], points[1][1], -2)
-        pass
+        self.cost_global = self.calculate_cost_global()
 
     def mainSA(self, steps):
 
@@ -88,11 +81,21 @@ class SudokuSA(ButtonInterface):
         for x in range(steps):
             # if cost is = sudoku board is correctly filled
             if self.cost_global == 0:
+                print("DONE")
                 break
+            else:
+                pass
+
+            if self.state == -1:
+                self.init_board_random()
+                self.calculate_rows_columns_costs()
+                self.cost_global = self.calculate_cost_global()
+                self.state += 1
+                return
 
             # 1. pick two elements on random
             if self.state == 0:
-                print("state 0")
+                # print("state 0")
                 self.swap_elements = self.pick_random()
                 self.board.set_color(self.swap_elements[0][0], self.swap_elements[0][1], "red")
                 self.board.set_color(self.swap_elements[1][0], self.swap_elements[1][1], "red")
@@ -101,40 +104,46 @@ class SudokuSA(ButtonInterface):
 
             # 2. swap elements
             elif self.state == 1:
-                print("state 1")
+                # print("state 1")
                 self.swap(self.swap_elements[0][0], self.swap_elements[0][1], self.swap_elements[1][0], self.swap_elements[1][1])
                 self.state += 1
                 self.gui.sync_board_and_canvas()
 
             # 3. calculate cost with new elements
             elif self.state == 2:
-                print("state 2")
+                # print("state 2")
 
                 # recalculate cost of altered columns and rows
-                self.cost_row_1_new = self.calculate_cost_row(self.swap_elements[0][0])
-                self.cost_row_2_new = self.calculate_cost_row(self.swap_elements[1][0])
-                self.cost_column_1_new = self.calculate_cost_column(self.swap_elements[0][1])
-                self.cost_column_2_new = self.calculate_cost_column(self.swap_elements[1][1])
+                self.cost_row_1_new = self.calculate_cost_row(self.swap_elements[0][1])
+                self.cost_row_2_new = self.calculate_cost_row(self.swap_elements[1][1])
+                self.cost_column_1_new = self.calculate_cost_column(self.swap_elements[0][0])
+                self.cost_column_2_new = self.calculate_cost_column(self.swap_elements[1][0])
 
                 # calculate difference in old and new cost  ( new cost - old cost )
-                self.diff_cost = self.cost_row_1_new - self.costs_row[self.swap_elements[0][0]]
-                self.diff_cost += self.cost_row_2_new - self.costs_row[self.swap_elements[1][0]]
-                self.diff_cost += self.cost_column_1_new - self.costs_column[self.swap_elements[0][1]]
-                self.diff_cost += self.cost_column_2_new - self.costs_column[self.swap_elements[1][1]]
+                self.diff_cost = self.cost_row_1_new - self.costs_row[self.swap_elements[0][1]]
+                self.diff_cost += self.cost_row_2_new - self.costs_row[self.swap_elements[1][1]]
+                self.diff_cost += self.cost_column_1_new - self.costs_column[self.swap_elements[0][0]]
+                self.diff_cost += self.cost_column_2_new - self.costs_column[self.swap_elements[1][0]]
+                # print("diff cost" + str(self.diff_cost))
 
                 self.state += 1
 
             # check if transaction should happen
             elif self.state == 3:
-                print("state 3")
+                # print("state 3")
                 if self.check_transaction(self.diff_cost) is False:
                     self.swap(self.swap_elements[0][0], self.swap_elements[0][1], self.swap_elements[1][0], self.swap_elements[1][1])
                 else:
-                    self.costs_row[self.swap_elements[0][0]] = self.cost_row_1_new
-                    self.costs_row[self.swap_elements[1][0]] = self.cost_row_2_new
-                    self.costs_column[self.swap_elements[0][1]] = self.cost_column_1_new
-                    self.costs_column[self.swap_elements[1][1]] = self.cost_column_2_new
+                    self.costs_row[self.swap_elements[0][1]] = self.cost_row_1_new
+                    self.costs_row[self.swap_elements[1][1]] = self.cost_row_2_new
+                    self.costs_column[self.swap_elements[0][0]] = self.cost_column_1_new
+                    self.costs_column[self.swap_elements[1][0]] = self.cost_column_2_new
                     self.cost_global += self.diff_cost
+                    assert self.cost_global == self.calculate_cost_global()
+                    print(self.cost_global)
+                    print(self.costs_column)
+                    print(self.costs_row)
+
 
                 self.board.set_color(self.swap_elements[0][0], self.swap_elements[0][1], "white")
                 self.board.set_color(self.swap_elements[1][0], self.swap_elements[1][1], "white")
@@ -196,7 +205,10 @@ class SudokuSA(ButtonInterface):
         return ((element_1_column, element_1_row), (element_2_column, element_2_row))
 
     def check_transaction(self, cost_diff):
-        return True
+        if cost_diff < 0:
+            return True
+        else:
+            return False
 
     def swap(self, e1_col, e1_row, e2_col, e2_row):
         value_e1 = self.board.get_value(e1_col, e1_row)
@@ -204,12 +216,31 @@ class SudokuSA(ButtonInterface):
         self.board.set(e2_col, e2_row,value_e1)
 
     def init_board_random(self):
-        for x in range(9):
-            row = x % 3
-            for x in range(3):
-                for y in range(3);
+        # for each of 9 squares
+        for k in range(9):
+            values = list(range(1,10))
+            add_row = k % 3
+            add_col = int(k / 3)
 
-        pass
+            for x in range(3):
+                for y in range(3):
+                    row = x + (add_row*3)
+                    col = y + (add_col*3)
+                    value_point = self.board.get_value(col,row)
+                    if value_point != 0:
+                        values.remove(value_point)
+
+            random.shuffle(values)
+
+            for x in range(3):
+                for y in range(3):
+                    row = x + add_row*3
+                    col = y + add_col*3
+                    value_point = self.board.get_value(col,row)
+                    if value_point == 0:
+                        self.board.set(col,row,values.pop())
+
+            self.gui.sync_board_and_canvas()
 
 
 random.seed(time.time())
