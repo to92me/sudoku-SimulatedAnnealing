@@ -1,5 +1,6 @@
 from tkinter import *
 import random
+from tkinter import filedialog
 from board import SudokuBoard
 
 def sudogen_1(board):
@@ -44,16 +45,26 @@ class ButtonInterface:
     def button_solve(self):
         pass
 
+    def button_plot_temp(self):
+        pass
+
+    def button_plot_cost(self):
+        pass
+
+    def button_load(self,file):
+        pass
+
+
 
 class SudokuGUI(Frame):
     board_generators = {"SudoGen v1 (Very Easy)": sudogen_1}
     board_generator = staticmethod(sudogen_1)
     button_interface = object
-    rsize = (700 / 9)
-    guidesize = (700 / 3)
-    rects = [[None for x in range(9)] for y in range(9)]
-    handles = [[None for x in range(9)] for y in range(9)]
-    coloring = True
+    rsize = (700 / 10)
+    guidesize = rsize * 3
+    rects = [[None for x in range(10)] for y in range(10)]
+    handles = [[None for x in range(10)] for y in range(10)]
+    gui_update = True
     canvas = object
 
     def make_modal_window(self, title):
@@ -74,8 +85,8 @@ class SudokuGUI(Frame):
 
         # self.make_square_lines()
 
-        for y in range(9):
-            for x in range(9):
+        for y in range(10):
+            for x in range(10):
                 (xr, yr) = (x*self.rsize, y*self.rsize)
                 r = self.canvas.create_rectangle(xr, yr, xr+self.rsize, yr+self.rsize)
                 t = self.canvas.create_text(xr+self.rsize/2, yr+self.rsize/2, text="-3", font="System 25 bold")
@@ -88,23 +99,33 @@ class SudokuGUI(Frame):
         write on canvas and color it
         :return:
         """
-        g = self.board.grid
-        for y in range(9):
-            for x in range(9):
-                # write value
-                if (g[y][x].value) != 0:
-                    self.canvas.itemconfig(self.handles[y][x][1], text=str(g[y][x].value))
-                else:
-                    self.canvas.itemconfig(self.handles[y][x][1], text='')
+        if self.gui_update == True:
+            g = self.board.grid
+            for y in range(9):
+                for x in range(9):
+                    # write value
+                    if (g[y][x].value) != 0:
+                        self.canvas.itemconfig(self.handles[y][x][1], text=str(g[y][x].value))
+                    else:
+                        self.canvas.itemconfig(self.handles[y][x][1], text='')
 
-                # color values
-                if(self.coloring == True):
+                    # color values
+
                     if g[y][x].locked:
                         self.canvas.itemconfig(self.handles[y][x][0], fill="grey")
                     else:
                         self.canvas.itemconfig(self.handles[y][x][0], fill=g[y][x].color)
 
-        self.make_square_lines()
+            for x in range(9):
+                self.canvas.itemconfig(self.handles[x][9][1], text=str(self.board.costs_rows[x].value))
+                self.canvas.itemconfig(self.handles[9][x][1], text=str(self.board.costs_columns[x].value))
+                self.canvas.itemconfig(self.handles[x][9][0], fill=self.board.costs_rows[x].color)
+                self.canvas.itemconfig(self.handles[9][x][0], fill=self.board.costs_columns[x].color)
+
+            self.canvas.itemconfig(self.handles[9][9][1], text=str(self.board.cost_global.value))
+            self.canvas.itemconfig(self.handles[9][9][0], fill=self.board.cost_global.color)
+
+            self.make_square_lines()
 
     def make_square_lines(self):
         """
@@ -130,8 +151,8 @@ class SudokuGUI(Frame):
         bframe = Frame(self)
         tframe = Frame(self)
 
-        self.ng = Button(bframe , text="New", padx=10, pady=10, command=self.button_interface.button_new)
-        self.ng.pack(side='left', fill='x', expand='1')
+        # self.ng = Button(bframe , text="New", padx=10, pady=10, command=self.on_open)
+        # self.ng.pack(side='left', fill='x', expand='1')
 
         self.sg = Button(bframe, text="small step", padx=10, pady=10, command=self.button_interface.button_small_step)
         self.sg.pack(side='left', fill='both', expand='1')
@@ -142,13 +163,18 @@ class SudokuGUI(Frame):
         self.query = Button(bframe, text="solve", padx=10, pady=10, command=self.button_interface.button_solve)
         self.query.pack(side='left', fill='x', expand='1')
 
+        self.plottmep = Button(bframe, text="Temp Plot", padx=10, pady=10, command=self.button_interface.button_plot_temp)
+        self.plottmep.pack(side='left', fill='x', expand='1')
+
+        self.plotcost = Button(bframe, text="Cost Plot", padx=10, pady=10,command=self.button_interface.button_plot_cost)
+        self.plotcost.pack(side='left', fill='x', expand='1')
+
         bframe.pack(side='bottom', fill='x', expand='1')
 
-        # self.tb = Text(tframe, width=50)
-        # self.tb.insert(self.tb.index(0),"This is white rabbit")
-        # self.tb.pack(side='right',fill='both', expand='1')
-
-        # tframe.pack(side='right',fill='y',expand='1')
+        # self.tb = Entry(tframe, width=20)
+        # self.tb.pack(side='top',fill='x', expand='1')
+        # #
+        # tframe.pack(side='right',fill='x',expand='1')
 
         # self.canvas.bind("<Button-1>", self.canvas_click)
         # self.canvas.bind("<Key>", self.canvas_key)
@@ -159,5 +185,36 @@ class SudokuGUI(Frame):
 
         self.button_interface.gui = self
 
+        menubar = Menu(master)
 
+        # create a pulldown menu, and add it to the menu bar
+        filemenu = Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Open", command=self.on_open)
+        filemenu.add_command(label="Solve", command=self.button_interface.button_solve)
+        filemenu.add_separator()
+        filemenu.add_command(label="Exit", command=master.quit)
+        menubar.add_cascade(label="File", menu=filemenu)
 
+        # create more pulldown menus
+        editmenu = Menu(menubar, tearoff=0)
+        editmenu.add_command(label="Plot Temperature", command=self.button_interface.button_plot_temp)
+        editmenu.add_command(label="Plot Cost", command=self.button_interface.button_plot_cost)
+        menubar.add_cascade(label="Plot", menu=editmenu)
+
+        helpmenu = Menu(menubar, tearoff=0)
+        helpmenu.add_command(label="About", command=self.button_interface.button_load)
+        menubar.add_cascade(label="Help", menu=helpmenu)
+
+        # display the menu
+        master.config(menu=menubar)
+
+    def query_board(self):
+        pass
+
+    def on_open(self):
+        ftypes = [('Text files', '*.txt'), ('All files', '*')]
+        dlg = filedialog.Open(self, filetypes=ftypes)
+        fl = dlg.show()
+
+        if fl != '':
+            text = self.button_interface.button_load(fl)
