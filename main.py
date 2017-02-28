@@ -56,6 +56,7 @@ class SudokuSA(ButtonInterface):
 
     reheat = 0
     reheat_limit = 500
+    reheat_counter = 0
     temperature_reheat = 80
     temperature = 99
     cooling_rate = 0.99
@@ -108,6 +109,7 @@ class SudokuSA(ButtonInterface):
             # if cost is = sudoku board is correctly filled
             if self.board.cost_global.value == 0:
                 print("DONE")
+                print(self.reheat_counter)
                 return
             else:
                 pass
@@ -184,6 +186,9 @@ class SudokuSA(ButtonInterface):
 
         self.plot_cost.add_x(self.board.cost_global.value)
         self.plot_temperature.add_x(self.temperature)
+
+        if self.board.cost_global == 0:
+            return
 
 
     def calculate_cost_global(self):
@@ -307,6 +312,7 @@ class SudokuSA(ButtonInterface):
         if self.reheat > self.reheat_limit:
             self.temperature = self.temperature_reheat
             self.reheat = 0
+            self.reheat_counter += 1
 
     def temperature_update(self):
         self.temperature = self.temperature * self.cooling_rate
