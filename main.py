@@ -127,13 +127,12 @@ class SudokuSA(ButtonInterface):
         self.calculate_rows_columns_costs()
         self.board.cost_global.value = self.calculate_cost_global()
         self.plot_temperature.y_label = "temperature"
-        self.plot_temperature.legend_label = "temperature"
+        self.plot_temperature.legend_label = "cost & temp"
         self.plot_temperature.plot_label = "Sudoku Simulated Annealing"
-        self.plot_cost.y_label = "cost"
+        self.plot_cost.y_label = "cost & temp"
         self.plot_cost.legend_label = "global cost"
         self.plot_cost.plot_label = "Sudoku Simulated Annealing"
         self.plot_cost.color = 'r'
-
 
     def mainSA(self, steps):
         """
@@ -144,6 +143,8 @@ class SudokuSA(ButtonInterface):
         for x in range(steps):
             # if cost is = sudoku board is correctly filled
             if self.board.cost_global.value == 0:
+                self.plot_cost.add_x(self.board.cost_global.value)
+                self.plot_temperature.add_x(self.temperature)
                 print("DONE")
                 print(self.reheat_counter)
                 return
@@ -190,9 +191,6 @@ class SudokuSA(ButtonInterface):
                 self.swap(self.swap_elements[0][0], self.swap_elements[0][1], self.swap_elements[1][0], self.swap_elements[1][1])
                 # change color of costs that will be updated
                 self.color_altered_costs(True)
-                # sync gui
-                self.gui.sync_board_and_canvas() # todo remove this?
-                self.state += 1
 
                 # store old costs from rows and columns that are affected by swap
                 self.cost_row_1_old = self.board.costs_rows[self.swap_elements[0][1]].value
@@ -214,6 +212,9 @@ class SudokuSA(ButtonInterface):
 
                 # sync gui
                 self.gui.sync_board_and_canvas()
+
+                # set state to next one
+                self.state += 1
 
             # CHECK IF SWAP WILL BE KEPT
             elif self.state == 2:
@@ -261,6 +262,10 @@ class SudokuSA(ButtonInterface):
 
         # if global cost of system is 0 sudoku is solved stop executing heuristic
         if self.board.cost_global == 0:
+            self.plot_cost.add_x(self.board.cost_global.value)
+            self.plot_temperature.add_x(self.temperature)
+            print("DONE EE")
+            print(self.reheat_counter)
             return
 
     def calculate_cost_global(self):
@@ -271,7 +276,7 @@ class SudokuSA(ButtonInterface):
         :return: global cost
         """
         cost = 0
-        #for each row and column
+        # for each row and column
         for x in range(9):
             cost += self.board.costs_columns[x].value
             cost += self.board.costs_rows[x].value
@@ -356,7 +361,7 @@ class SudokuSA(ButtonInterface):
             # check if elements are not same. If not check if random elements are not locked. If not, random elements are OK and return them
             # if some of checks fails try again random
             if element_1_row != element_2_row or element_1_column != element_2_column:
-                if (self.board.get_locked(element_1_column, element_1_row) == False and self.board.get_locked(element_2_column, element_2_row) == False):
+                if self.board.get_locked(element_1_column, element_1_row) == False and self.board.get_locked(element_2_column, element_2_row) == False:
                     break
 
         return ((element_1_column, element_1_row), (element_2_column, element_2_row))
@@ -381,8 +386,8 @@ class SudokuSA(ButtonInterface):
             # chose randomly with probability of exp(-cooling_rate/temperature)
             probability_true = self.temperature/100
             probability_false = 1 - probability_true
-            choices = [True,False]
-            choices_probability = [probability_true,probability_false]
+            choices = [True, False]
+            choices_probability = [probability_true, probability_false]
             draw = choice_numpy(choices,1,p=choices_probability)[0]
 
             # if draw is False increment reheat
@@ -395,7 +400,6 @@ class SudokuSA(ButtonInterface):
             self.temperature_update()
             return draw
 
-
     def swap(self, e1_col, e1_row, e2_col, e2_row):
         """
         swap elements on sudoku board
@@ -406,7 +410,7 @@ class SudokuSA(ButtonInterface):
         """
         value_e1 = self.board.get_value(e1_col, e1_row)
         self.board.set(e1_col, e1_row, self.board.get_value(e2_col, e2_row))
-        self.board.set(e2_col, e2_row,value_e1)
+        self.board.set(e2_col, e2_row, value_e1)
 
     def init_board_random(self):
         """

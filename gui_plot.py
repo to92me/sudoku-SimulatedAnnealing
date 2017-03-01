@@ -48,7 +48,7 @@ class PlotStats:
     def plot_value_x_time_y(self):
         time = list(range(len(self.list_x)))
 
-        plt.plot(time, self.list_x, color=self.color )
+        plt.plot(time, self.list_x, color=self.color, label=self.legend_label)
 
         plt.xlabel("time")
         plt.ylabel(self.y_label)
