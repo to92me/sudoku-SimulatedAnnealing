@@ -58,15 +58,15 @@ class SudokuSA(ButtonInterface):
     # number of reheats
     reheat = 0
     # if reheat counter reaches this value, system will be reheated
-    reheat_limit = 500
+    reheat_limit = 3000
     # reheat counter
     reheat_counter = 0
     # temperature of system after repeat
-    temperature_reheat = 80
+    temperature_reheat = 50
     #  initial temperature of system
     temperature = 99
     # colling rate of system
-    cooling_rate = 0.99
+    cooling_rate = 0.999
 
     def button_big_step(self):
         """
@@ -98,10 +98,14 @@ class SudokuSA(ButtonInterface):
         self.gui.sync_board_and_canvas()
         self.gui.gui_update = False
         for x in range(10000000):
-            if self.board.cost_global.value != 0:
+            if self.board.cost_global.value != 0 and self.calculate_cost_global() != 0:
                 self.mainSA(3)
             else:
-                break
+                self.plot_cost.add_x(self.board.cost_global.value)
+                self.plot_temperature.add_x(self.temperature)
+                print("DONE")
+                print(self.reheat_counter)
+                return
         self.gui.gui_update = True
         self.gui.sync_board_and_canvas()
 
@@ -126,8 +130,8 @@ class SudokuSA(ButtonInterface):
         self.plot_temperature = PlotStats()
         self.calculate_rows_columns_costs()
         self.board.cost_global.value = self.calculate_cost_global()
-        self.plot_temperature.y_label = "temperature"
-        self.plot_temperature.legend_label = "cost & temp"
+        self.plot_temperature.y_label = "cost & temp"
+        self.plot_temperature.legend_label = "temperature"
         self.plot_temperature.plot_label = "Sudoku Simulated Annealing"
         self.plot_cost.y_label = "cost & temp"
         self.plot_cost.legend_label = "global cost"
@@ -143,10 +147,10 @@ class SudokuSA(ButtonInterface):
         for x in range(steps):
             # if cost is = sudoku board is correctly filled
             if self.board.cost_global.value == 0:
-                self.plot_cost.add_x(self.board.cost_global.value)
-                self.plot_temperature.add_x(self.temperature)
-                print("DONE")
-                print(self.reheat_counter)
+                # self.plot_cost.add_x(self.board.cost_global.value)
+                # self.plot_temperature.add_x(self.temperature)
+                # print("DONE")
+                # print(self.reheat_counter)
                 return
             else:
                 pass
@@ -234,6 +238,8 @@ class SudokuSA(ButtonInterface):
                     self.board.cost_global.value += self.diff_cost
                     # check if global cost + diff in cost is same as calculated global from sum of costs of columns and rows
                     assert self.board.cost_global.value == self.calculate_cost_global()
+                    if self.calculate_cost_global() == 0:
+                        return
 
                 # update gui
                 self.gui.sync_board_and_canvas()
@@ -262,10 +268,10 @@ class SudokuSA(ButtonInterface):
 
         # if global cost of system is 0 sudoku is solved stop executing heuristic
         if self.board.cost_global == 0:
-            self.plot_cost.add_x(self.board.cost_global.value)
-            self.plot_temperature.add_x(self.temperature)
-            print("DONE EE")
-            print(self.reheat_counter)
+            # self.plot_cost.add_x(self.board.cost_global.value)
+            # self.plot_temperature.add_x(self.temperature)
+            # print("DONE EE")
+            # print(self.reheat_counter)
             return
 
     def calculate_cost_global(self):
