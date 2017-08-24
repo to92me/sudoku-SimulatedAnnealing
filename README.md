@@ -18,16 +18,16 @@ The original document is given in folder docs.
 
 ## Sudoku problem instances 
 example: 
->400600123
-000002070
-001030906
-700928000
-916000382
-000361004
-508010600
-090800000
-124006007
-
+>400600123     
+>000002070      
+>001030906      
+>700928000      
+>916000382      
+>000361004      
+>508010600      
+>090800000       
+>124006007      
+  
 where each 0 is an empty place in sudoku table. 
 Examples of sudoku problem instances are in folder sudoku_instances 
 
